@@ -57,26 +57,26 @@ Our solution wraps this legacy system in a **type-safe, asynchronous REST API** 
 ```mermaid
 flowchart TD
     subgraph Clients["Client Layer"]
-        A["External Services / Data Engineers"] -->|REST / JSON| E["FastAPI Gateway (:8000)"]
-        B["Browser Users / Operators"] -->|Web UI / Dashboard| E
-        C["API Explorers"] -->|Swagger / Redoc /docs| E
+        A["External Services / Data Engineers"] -->|"REST / JSON"| E["FastAPI Gateway"]
+        B["Browser Users / Operators"] -->|"Web UI / Dashboard"| E
+        C["API Explorers"] -->|"Swagger / Redoc /docs"| E
     end
 
     subgraph Service["Modern Urja API Platform"]
-        E --> F["API Routers (/api/v1/*)"]
+        E --> F["API Routers"]
         F --> G["Meter & Domain Service Layer"]
-        G --> H["Hierarchy Service (Graph & Self-Healing)"]
-        G --> I["Spatial Service (Haversine Distance Engine)"]
-        G --> J["Energy Service (Power Factor & Telemetry)"]
-        G --> K["In-Memory Cache & Index (TTL + SWR)"]
+        G --> H["Hierarchy Service - Graph & Self-Healing"]
+        G --> I["Spatial Service - Haversine Distance Engine"]
+        G --> J["Energy Service - Power Factor & Telemetry"]
+        G --> K["In-Memory Cache & Index - TTL + SWR"]
         K --> L["Urja Upstream Adapter Client"]
     end
 
     subgraph Upstream["Urja Meter Ops Legacy Portal"]
-        L -->|1. Better-Auth Login (CSRF-Safe)| M["POST /login"]
-        L -->|2. Key Retrieval| N["GET /portal/keys"]
-        L -->|3. Signed Bulk Ingest (HMAC-SHA256)| O["GET /portal/export?page=1"]
-        L -->|4. Live Telemetry| P["GET /portal/meters/{id}/energy"]
+        L -->|"1. Better-Auth Login (CSRF-Safe)"| M["POST /login"]
+        L -->|"2. Key Retrieval"| N["GET /portal/keys"]
+        L -->|"3. Signed Bulk Ingest (HMAC-SHA256)"| O["GET /portal/export?page=1"]
+        L -->|"4. Live Telemetry"| P["GET /portal/meters/:id/energy"]
     end
 ```
 
