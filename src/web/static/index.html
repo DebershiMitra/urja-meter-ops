@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urja Meter Ops — Modern Grid Intelligence Platform</title>
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <h1 class="brand-title">Urja Meter Ops</h1>
+        <p class="brand-subtitle">Modern Grid Intelligence & Telemetry Platform</p>
+      </div>
+    </div>
+    
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="tab-overview">Overview & Map</button>
+      <button class="nav-tab" data-tab="tab-hierarchy">Network Hierarchy</button>
+      <button class="nav-tab" data-tab="tab-energy">Energy Telemetry</button>
+      <button class="nav-tab" data-tab="tab-directory">Meter Directory</button>
+    </nav>
+
+    <div class="header-actions">
+      <div class="system-status-pill" id="health-pill">
+        <span class="status-indicator"></span>
+        <span id="health-text">Connecting...</span>
+      </div>
+      <a href="/docs" target="_blank" class="btn btn-secondary">API Docs (Swagger)</a>
+      <button id="btn-refresh" class="btn btn-primary" title="Purge & Re-ingest from Upstream">↻ Sync</button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- TAB 1: OVERVIEW & MAP -->
+    <section id="tab-overview" class="tab-pane active">
+      <!-- KPI Metric Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Total Smart Meters</div>
+          <div class="metric-value" id="kpi-total-meters">—</div>
+          <div class="metric-subtext">Across 40 Distribution Transformers</div>
+        </div>
+        <div class="metric-card card-success">
+          <div class="metric-label">Operational Health</div>
+          <div class="metric-value" id="kpi-health-rate">—%</div>
+          <div class="metric-subtext"><span id="kpi-installed-count">0</span> Active & Installed</div>
+        </div>
+        <div class="metric-card card-warning">
+          <div class="metric-label">Faulty Meters</div>
+          <div class="metric-value" id="kpi-faulty-meters">—</div>
+          <div class="metric-subtext">Require Field Inspection</div>
+        </div>
+        <div class="metric-card card-danger">
+          <div class="metric-label">Decommissioned</div>
+          <div class="metric-value" id="kpi-decom-meters">—</div>
+          <div class="metric-subtext">Retired or Replaced</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Distribution Transformers</div>
+          <div class="metric-value" id="kpi-total-dts">40</div>
+          <div class="metric-subtext">Full Capacity Indexed</div>
+        </div>
+      </div>
+
+      <!-- Map & Proximity Filter Section -->
+      <div class="map-layout">
+        <div class="map-container-box">
+          <div class="section-header">
+            <h2>Geospatial Grid Distribution</h2>
+            <div class="map-legend">
+              <span class="legend-item"><span class="legend-dot dot-installed"></span> Installed</span>
+              <span class="legend-item"><span class="legend-dot dot-faulty"></span> Faulty</span>
+              <span class="legend-item"><span class="legend-dot dot-decom"></span> Decommissioned</span>
+            </div>
+          </div>
+          <div id="grid-map"></div>
+        </div>
+
+        <div class="spatial-search-box">
+          <h3>Proximity / Radius Search</h3>
+          <p class="text-muted">Query meters within a radius using Haversine calculation</p>
+          <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" id="spatial-lat" step="0.0001" value="26.9124">
+          </div>
+          <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" id="spatial-lng" step="0.0001" value="75.7873">
+          </div>
+          <div class="form-group">
+            <label>Radius (km)</label>
+            <input type="number" id="spatial-radius" step="0.5" value="5.0" min="0.5" max="50">
+          </div>
+          <button id="btn-spatial-search" class="btn btn-primary full-width">Find Nearby Meters</button>
+
+          <div class="spatial-results" id="spatial-results">
+            <div class="empty-state">Click a point on the map or click "Find Nearby Meters" to run a proximity query.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: NETWORK HIERARCHY -->
+    <section id="tab-hierarchy" class="tab-pane">
+      <div class="hierarchy-header">
+        <div>
+          <h2>7-Tier Utility Distribution Hierarchy</h2>
+          <p class="text-muted">Reconstructed utility grid topology with automated topological healing for missing links</p>
+        </div>
+        <div class="healing-badge" id="hierarchy-healing-badge">
+          ✨ 14 Records Automatically Healed
+        </div>
+      </div>
+
+      <div class="hierarchy-tier-pills" id="hierarchy-stats-bar">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="hierarchy-tree-card">
+        <div class="tree-controls">
+          <input type="text" id="tree-search" placeholder="Filter hierarchy tree (e.g. Malviya Nagar, DT-001)..." class="search-input">
+        </div>
+        <div id="hierarchy-tree-container" class="tree-container">
+          <!-- Recursive tree rendered here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ENERGY TELEMETRY -->
+    <section id="tab-energy" class="tab-pane">
+      <div class="energy-controls-card">
+        <div class="meter-selector-row">
+          <label>Select Meter for Telemetry Analysis:</label>
+          <select id="energy-meter-select" class="select-input">
+            <!-- Populated via API -->
+          </select>
+          <button id="btn-load-energy" class="btn btn-primary">Load Telemetry</button>
+        </div>
+      </div>
+
+      <div class="energy-metrics-grid" id="energy-kpis">
+        <div class="metric-card">
+          <div class="metric-label">7-Day Net Consumption</div>
+          <div class="metric-value" id="kpi-energy-kwh">— kWh</div>
+          <div class="metric-subtext">Active Energy Delta</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Apparent Energy</div>
+          <div class="metric-value" id="kpi-energy-kvah">— kVAh</div>
+          <div class="metric-subtext">Total Power Drawn</div>
+        </div>
+        <div class="metric-card card-success">
+          <div class="metric-label">Average Power Factor</div>
+          <div class="metric-value" id="kpi-energy-pf">—</div>
+          <div class="metric-subtext">Efficiency Ratio (kWh / kVAh)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Average Voltage</div>
+          <div class="metric-value" id="kpi-energy-vavg">— V</div>
+          <div class="metric-subtext">Nominal: 230V ± 10%</div>
+        </div>
+        <div class="metric-card card-warning">
+          <div class="metric-label">Sub-Nominal Dips (&lt;200V)</div>
+          <div class="metric-value" id="kpi-energy-dips">—</div>
+          <div class="metric-subtext">Voltage Quality Events</div>
+        </div>
+      </div>
+
+      <div class="chart-container-box">
+        <h3>30-Minute Interval Load Profile & Voltage Fluctuations</h3>
+        <div class="chart-wrapper">
+          <canvas id="energy-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: METER DIRECTORY -->
+    <section id="tab-directory" class="tab-pane">
+      <div class="directory-filter-bar">
+        <input type="text" id="dir-search" placeholder="Search by Meter ID, Serial, Make, DT..." class="search-input">
+        <select id="dir-filter-status" class="select-input">
+          <option value="">All Statuses</option>
+          <option value="Installed">Installed</option>
+          <option value="Faulty">Faulty</option>
+          <option value="Decommissioned">Decommissioned</option>
+        </select>
+        <select id="dir-filter-phase" class="select-input">
+          <option value="">All Phases</option>
+          <option value="single">Single Phase</option>
+          <option value="three">Three Phase</option>
+        </select>
+        <select id="dir-filter-make" class="select-input">
+          <option value="">All Manufacturers</option>
+          <option value="HPL">HPL</option>
+          <option value="L&T">L&T</option>
+          <option value="Genus">Genus</option>
+          <option value="Secure">Secure</option>
+          <option value="Allied">Allied</option>
+        </select>
+        <button id="btn-apply-filters" class="btn btn-secondary">Apply Filters</button>
+      </div>
+
+      <div class="table-card">
+        <table class="data-table" id="meters-table">
+          <thead>
+            <tr>
+              <th>Meter ID</th>
+              <th>Serial No</th>
+              <th>Make</th>
+              <th>Phase</th>
+              <th>Status</th>
+              <th>Transformer (DT)</th>
+              <th>Zone / Feeder</th>
+              <th>Healed Link</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="meters-table-body">
+            <tr>
+              <td colspan="9" class="text-center text-muted">Loading meters...</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="table-pagination">
+          <div class="pagination-info" id="pagination-info">Showing page 1 of 1</div>
+          <div class="pagination-controls">
+            <button id="btn-prev-page" class="btn btn-sm" disabled>Previous</button>
+            <button id="btn-next-page" class="btn btn-sm">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Urja Meter Ops Modern API Platform • Designed for Flock Energy • Automated Re-Authentication & HMAC Bulk Export</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
