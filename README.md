@@ -15,14 +15,15 @@ Developed as part of the **Flock Energy Engineering Take-Home Challenge**.
 ## Table of Contents
 1. [Overview & What We Built](#1-overview--what-we-built)
 2. [Key Deliverables Quick Links](#2-key-deliverables-quick-links)
-3. [Architecture & System Flow](#3-architecture--system-flow)
-4. [Quickstart: Installation & Running](#4-quickstart-installation--running)
-5. [Sample API Requests & cURL Examples](#5-sample-api-requests--curl-examples)
-6. [Design Decisions & Trade-Offs](#6-design-decisions--trade-offs)
-7. [What We Intentionally Left Out & Why](#7-what-we-intentionally-left-out--why)
-8. [Optional Extensions Implemented](#8-optional-extensions-implemented)
-9. [What We'd Improve With More Time](#9-what-wed-improve-with-more-time)
-10. [Reflection & Self-Critique](#10-reflection--self-critique)
+3. [Visual Tour & Dashboard Previews](#3-visual-tour--dashboard-previews)
+4. [Architecture & System Flow](#4-architecture--system-flow)
+5. [Quickstart: Installation & Running](#5-quickstart-installation--running)
+6. [Sample API Requests & cURL Examples](#6-sample-api-requests--curl-examples)
+7. [Design Decisions & Trade-Offs](#7-design-decisions--trade-offs)
+8. [What We Intentionally Left Out & Why](#8-what-we-intentionally-left-out--why)
+9. [Optional Extensions Implemented](#9-optional-extensions-implemented)
+10. [What We'd Improve With More Time](#10-what-wed-improve-with-more-time)
+11. [Reflection & Self-Critique](#11-reflection--self-critique)
 
 ---
 
@@ -52,7 +53,55 @@ Our solution wraps this legacy system in a **type-safe, asynchronous REST API** 
 
 ---
 
-## 3. Architecture & System Flow
+## 3. Visual Tour & Dashboard Previews
+
+The platform includes a built-in, responsive web application served at `http://localhost:8000/`. Below is a visual walkthrough of the primary screens and analytics capabilities:
+
+### 3.1 Geospatial Grid Distribution & Macro KPI Overview
+Displays all 403 smart meters across the Jaipur utility territory plotted on an OpenStreetMap canvas with color-coded operational status pins (Green = Installed, Amber = Faulty, Red = Decommissioned), alongside system health and transformer summaries:
+
+![Geospatial Grid Distribution & Overview](dashboard_screens/01_overview_and_map.png)
+
+---
+
+### 3.2 Real-Time Spatial Proximity & Haversine Radius Search
+Field operations can select any coordinate on the map or input custom GPS latitude/longitude and radius (km) to run instant great-circle proximity queries:
+
+![Spatial Proximity Radius Search](dashboard_screens/02_spatial_proximity_search.png)
+
+---
+
+### 3.3 7-Tier Distribution Hierarchy Explorer & Topological Self-Healing
+An interactive recursive tree reassembling the complete distribution network (`Zone` $\rightarrow$ `Circle` $\rightarrow$ `Division` $\rightarrow$ `Subdivision` $\rightarrow$ `Substation` $\rightarrow$ `Feeder` $\rightarrow$ `Distribution Transformer`), featuring the automated topological healing engine that reconciled all 14 corrupted upstream records:
+
+![7-Tier Distribution Hierarchy Explorer](dashboard_screens/03_network_hierarchy.png)
+
+---
+
+### 3.4 30-Minute Interval Load Curves & Voltage Health Telemetry
+Deep telemetry visualizer plotting 337 half-hourly interval captures on a dual-axis Chart.js curve, showing cumulative active energy consumption (kWh), power factor efficiency ratio, and flagging sub-nominal voltage sags ($<200\text{V}$):
+
+![Energy Telemetry & Voltage Health Analysis](dashboard_screens/04_energy_telemetry_curves.png)
+
+---
+
+### 3.5 Searchable & Filterable Smart Meter Directory Table
+A high-density operational data grid supporting real-time multi-attribute filtering by status, phase, hardware make, and transformer assignment, complete with pagination and self-healing audit badges:
+
+![Smart Meter Directory Table](dashboard_screens/05_meter_directory_table.png)
+
+---
+
+### 3.6 Interactive OpenAPI 3.1 Documentation (Swagger UI & Redoc)
+Self-documenting interactive API endpoints served natively by FastAPI for third-party systems integration and data engineering teams:
+
+| Swagger UI (`/docs`) | Redoc (`/redoc`) |
+|:---:|:---:|
+| ![Swagger UI](dashboard_screens/06_swagger_ui_docs.png) | ![Redoc](dashboard_screens/07_redoc_api_docs.png) |
+
+---
+
+## 4. Architecture & System Flow
 
 ```mermaid
 flowchart TD
@@ -116,7 +165,7 @@ d:\flock energy\
 
 ---
 
-## 4. Quickstart: Installation & Running
+## 5. Quickstart: Installation & Running
 
 ### Option A: Local Python Environment
 
@@ -167,7 +216,7 @@ Access the application immediately at `http://localhost:8000`.
 
 ---
 
-## 5. Sample API Requests & cURL Examples
+## 6. Sample API Requests & cURL Examples
 
 ### 1. Grid Health & Analytics Overview
 ```bash
@@ -267,7 +316,7 @@ curl -X GET "http://localhost:8000/api/v1/spatial/nearby?latitude=26.9124&longit
 
 ---
 
-## 6. Design Decisions & Trade-Offs
+## 7. Design Decisions & Trade-Offs
 
 1. **Direct Protocol Ingestion over Headless Browser Scraping:**
    - *Decision:* Rather than using Selenium or Playwright to drive a browser, we reverse-engineered the SvelteKit REST calls and cryptographic HMAC export protocol.
@@ -282,7 +331,7 @@ curl -X GET "http://localhost:8000/api/v1/spatial/nearby?latitude=26.9124&longit
 
 ---
 
-## 7. What We Intentionally Left Out & Why
+## 8. What We Intentionally Left Out & Why
 
 - **Authentication on the Modern API Layer (API Keys / OAuth2):** We intentionally left the clean API open for frictionless review and evaluation. In a production rollout, an API Gateway (Kong, Traefik) or JWT middleware would enforce consumer authentication.
 - **Write / Mutating Endpoints:** The assignment explicitly stated: *"Treat the portal as read-only. You don't need to (and shouldn't try to) attack or break it"*. Hence, we did not expose synthetic create/update endpoints.
@@ -290,7 +339,7 @@ curl -X GET "http://localhost:8000/api/v1/spatial/nearby?latitude=26.9124&longit
 
 ---
 
-## 8. Optional Extensions Implemented
+## 9. Optional Extensions Implemented
 
 All six optional extensions proposed in the take-home prompt were completed:
 
@@ -328,7 +377,7 @@ All six optional extensions proposed in the take-home prompt were completed:
 
 ---
 
-## 9. What We'd Improve With More Time
+## 10. What We'd Improve With More Time
 
 1. **Persistent Spatial Database with PostGIS:** Migrate from in-memory Haversine calculations to PostGIS spatial indexes to support polygon geofencing and multi-million meter query scaling.
 2. **WebSocket Telemetry Streaming:** Implement `/ws/telemetry` to push real-time alerts to field staff when a meter registers a voltage sag ($<200\text{V}$) or power factor drops below 0.80.
@@ -336,7 +385,7 @@ All six optional extensions proposed in the take-home prompt were completed:
 
 ---
 
-## 10. Reflection & Self-Critique
+## 11. Reflection & Self-Critique
 
 See the complete five-question reflection in [REFLECTION.md](REFLECTION.md).
 
